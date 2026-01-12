@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý chi tiêu</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            padding: 15px;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+
+        .total {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>📊 Quản lý chi tiêu</h2>
+    <h4>Chị Như nuôi Hưng Hưng</h4>
+
+    <input type="number" id="money" placeholder="Nhập số tiền (VD: 50000)">
+    <input type="text" id="note" placeholder="Nội dung chi tiêu">
+    <button onclick="addExpense()">➕ Thêm</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Số tiền</th>
+                <th>Nội dung</th>
+            </tr>
+        </thead>
+        <tbody id="table"></tbody>
+    </table>
+
+    <div class="total">
+        Tổng tiền: <span id="total">0</span> đ
+    </div>
+
+    <script>
+        let expenses = [];
+        let total = 0;
+
+        function addExpense() {
+            let money = Number(document.getElementById("money").value);
+            let note = document.getElementById("note").value;
+
+            if (money <= 0 || note === "") {
+                alert("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+
+            expenses.push({ money, note });
+            total += money;
+
+            renderTable();
+
+            document.getElementById("money").value = "";
+            document.getElementById("note").value = "";
+        }
+
+        function renderTable() {
+            let table = document.getElementById("table");
+            table.innerHTML = "";
+
+            expenses.forEach((e, index) => {
+                table.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${e.money.toLocaleString()}</td>
+          <td>${e.note}</td>
+        </tr>
+      `;
+            });
+
+            document.getElementById("total").innerText = total.toLocaleString();
+        }
+    </script>
+
+</body>
+
+</html>
