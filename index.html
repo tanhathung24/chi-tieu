@@ -2,78 +2,155 @@
 <html lang="vi">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý chi tiêu</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý chi tiêu</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 15px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    input,
+    button,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+
+    .total {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 </head>
 
 <body>
+  <h2>📊 Quản lý chi tiêu</h2>
+  <h4>Chị Như nuôi Hưng Hưng</h4>
 
-    <h2>📊 Quản lý chi tiêu</h2>
-    <h4>Chị Như nuôi Hưng Hưng</h4>
+  <select id="user">
+    <option value="nhu">Chị Như</option>
+    <option value="hung">Hưng</option>
+  </select>
 
-    <input type="number" id="money" placeholder="Nhập số tiền (VD: 50000)">
-    <input type="text" id="note" placeholder="Nội dung chi tiêu">
-    <button onclick="addExpense()">➕ Thêm</button>
+  <input type="number" id="money" placeholder="Nhập số tiền (VD: 50000)" />
+  <input type="text" id="note" placeholder="Nội dung chi tiêu" />
+  <button onclick="addExpense()">➕ Thêm</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th>STT</th>
-                <th>Số tiền</th>
-                <th>Nội dung</th>
-            </tr>
-        </thead>
-        <tbody id="table"></tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Số tiền</th>
+        <th>Nội dung</th>
+      </tr>
+    </thead>
+    <tbody id="table"></tbody>
+  </table>
 
-    <div class="total">
-        Tổng tiền: <span id="total">0</span> đ
-    </div>
+  <div class="total">
+    Tổng tiền: <span id="total">0</span> đ
+  </div>
 
-    <script>
-        let expenses = [];
-        let total = 0;
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCa3r0r2qJ4eDt_QAltXaY3sPXn_cBdrZU",
+      authDomain: "chi-tieu-49fe5.firebaseapp.com",
+      projectId: "chi-tieu-49fe5",
+      storageBucket: "chi-tieu-49fe5.appspot.com",
+      messagingSenderId: "1018225594634",
+      appId: "1:1018225594634:web:0220af13e0c050aaab2af3",
+      measurementId: "G-8X0HQQYJNH"
+    };
 
-        function addExpense() {
-            let money = Number(document.getElementById("money").value);
-            let note = document.getElementById("note").value;
+    // Khởi tạo Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            if (money <= 0 || note === "") {
-                alert("Vui lòng nhập đầy đủ thông tin!");
-                return;
-            }
+    // Thêm chi tiêu
+    function addExpense() {
+      const user = document.getElementById("user").value;
+      const money = Number(document.getElementById("money").value);
+      const note = document.getElementById("note").value;
 
-            expenses.push({ money, note });
-            total += money;
+      if (money <= 0 || note === "") {
+        alert("Vui lòng nhập đầy đủ thông tin!");
+        return;
+      }
 
-            renderTable();
+      db.collection("expenses").add({
+        user: user,
+        money: money,
+        note: note,
+        createdAt: new Date()
+      });
 
-            document.getElementById("money").value = "";
-            document.getElementById("note").value = "";
-        }
+      document.getElementById("money").value = "";
+      document.getElementById("note").value = "";
+    }
 
-        function renderTable() {
-            let table = document.getElementById("table");
-            table.innerHTML = "";
+    // Hiển thị dữ liệu realtime
+    const userSelect = document.getElementById("user");
+    userSelect.addEventListener("change", () => {
+      loadExpenses(userSelect.value);
+    });
 
-            expenses.forEach((e, index) => {
-                table.innerHTML += `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${e.money.toLocaleString()}</td>
-          <td>${e.note}</td>
-        </tr>
-      `;
-            });
+    function loadExpenses(user) {
+      db.collection("expenses")
+        .where("user", "==", user)
+        .orderBy("createdAt")
+        .onSnapshot(snapshot => {
+          let table = document.getElementById("table");
+          table.innerHTML = "";
+          let total = 0;
 
-            document.getElementById("total").innerText = total.toLocaleString();
-        }
-    </script>
+          snapshot.forEach((doc, index) => {
+            const e = doc.data();
+            total += e.money;
+            table.innerHTML += `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${e.money.toLocaleString()}</td>
+                <td>${e.note}</td>
+              </tr>
+            `;
+          });
 
+          document.getElementById("total").innerText = total.toLocaleString();
+        });
+    }
+
+    // Tải dữ liệu ban đầu
+    loadExpenses(userSelect.value);
+  </script>
 </body>
 
-
 </html>
-
